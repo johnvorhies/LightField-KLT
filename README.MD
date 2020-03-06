@@ -12,12 +12,12 @@ generates the KLT or SKLT matrix of size **N** for a given correlation **rho**.
 ### [DCT, SDCT] = generateDCT(N)
 generates the DCT or SDCT matrix of size **N**.
 
-### [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv_single,N)
+### [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv,N)
 Performs the 4-D KLT, compression, and inverse 4-D KLT on a 4-D light field. This function requires an NVidia GPU.
 
 #### Inputs:
 * **klt_s,klt_t,klt_u,klt_v**: The transform matrices to be used for each dimension of the light field.
-* **st_uv_single**: A 4-D grayscale light field in the two-plane parameterization form.
+* **st_uv**: A 4-D grayscale light field in the two-plane parameterization form.
 * **N**: The percentage of compression to be used.
 
 #### Outputs:
