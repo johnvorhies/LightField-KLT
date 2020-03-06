@@ -1,5 +1,6 @@
-function [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv_single,N)
-    st_uv_single = gpuArray(single(st_uv_single));
+function [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv,N)
+    st_uv_single = gpuArray(single(st_uv));
+    st_uv = [];
     
     N_st = length(klt_s);
     N_uv = length(klt_u);

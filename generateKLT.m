@@ -1,4 +1,4 @@
-function [KLT,aKLT] = generateKLT(rho,N)
+function [KLT,SKLT] = generateKLT(rho,N)
     % Generate covariance matrix
     K = zeros(N,N);
     for i = 1:N
@@ -20,5 +20,5 @@ function [KLT,aKLT] = generateKLT(rho,N)
         end
     end
     
-    aKLT = 1/sqrt(N)*sign(KLT);
+    SKLT = 1/sqrt(N)*sign(KLT);
 end
