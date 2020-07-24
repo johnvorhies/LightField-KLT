@@ -1,6 +1,5 @@
-function [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv,N)
-    st_uv_single = gpuArray(single(st_uv));
-    st_uv = [];
+function [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv_single,p)
+    st_uv_single = gpuArray(single(st_uv_single));
     
     N_st = length(klt_s);
     N_uv = length(klt_u);
@@ -36,15 +35,21 @@ function [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv,N)
     st_uv_KLT = pagefun(@mtimes,klt_u,st_uv_KLT);
     st_uv_KLT = reshape(st_uv_KLT,Nt,Ns,Nv,Nu);
     
-%--------------------------- Remove Coefficients ------------------------
+%-----------------Quantize and Remove Coefficients -----------------
+    if gather(klt_s) == sign(gather(klt_s))
+        Q = 1/(sqrt(1/N_st)^2*sqrt(1/N_uv)^2);
+    else
+        Q = 1;
+    end
+    st_uv_KLT = round(st_uv_KLT/Q);
     
-    st_uv_KLT = gather(st_uv_KLT);
+    st_uv_KLT = double(gather(st_uv_KLT));
     for nt = 1:N_st:Nt
         for ns = 1:N_st:Ns
             for nv = 1:N_uv:Nv
                 for nu = 1:N_uv:Nu
                     blockLF = st_uv_KLT(nt:nt+N_st-1,ns:ns+N_st-1,nv:nv+N_uv-1,nu:nu+N_uv-1);
-                    percent = prctile(abs(blockLF(:)),N);
+                    percent = prctile(abs(blockLF(:)),100-p);
                     ind = abs(blockLF) < percent;
                     blockLF(ind) = 0;
                     st_uv_KLT(nt:nt+N_st-1,ns:ns+N_st-1,nv:nv+N_uv-1,nu:nu+N_uv-1) = blockLF;
@@ -52,8 +57,11 @@ function [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv,N)
             end
         end
     end
-    st_uv_KLT = gpuArray(st_uv_KLT);
+    
+    st_uv_KLT = st_uv_KLT*Q;
+    st_uv_KLT = gpuArray(single(st_uv_KLT));
 
+    % Some leftover code
 %     tempLF = zeros(size(st_uv_KLT),'single','gpuArray');
 %     tempLF(1,1,:,:) = squeeze(st_uv_KLT(1,1,:,:));
 %     tempLF(1,9,:,:) = squeeze(st_uv_KLT(1,9,:,:));
@@ -97,8 +105,8 @@ function [st_uv_KLT] = applyKLT_GPU(klt_s,klt_t,klt_u,klt_v,st_uv,N)
     st_uv_KLT = reshape(st_uv_KLT,N_st,1,[]);
     st_uv_KLT = pagefun(@mtimes,inv_klt_t,st_uv_KLT);
     st_uv_KLT = reshape(st_uv_KLT,Ns,Nv,Nu,Nt);
-    st_uv_KLT = permute(st_uv_KLT,[4 1 2 3]); 
+    st_uv_KLT = permute(st_uv_KLT,[4 1 2 3]);
     
-    st_uv_KLT = gather(uint16(st_uv_KLT));
+    st_uv_KLT = gather(uint8(st_uv_KLT));
     
 end
